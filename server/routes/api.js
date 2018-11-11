@@ -9,6 +9,7 @@ const express = require('express');
 const router = express.Router();
 const xlsx = require('node-xlsx');
 const logger = require('../logger').default;
+var glob = require("glob");
 var multer = require('multer');
 var homeDir = require('home-dir');
 var storageDir = homeDir('/storage');  //home/root/storage/
@@ -36,27 +37,32 @@ router.get('/', function (req, res, next) {
 });
 
 //导入Excel，xlsx格式
-// const xlsxfile = "/Users/wangning25/Documents/呼伦贝尔双11价格单(3).xlsx";
-// router.post('/xlsx', async (ctx) => {
-//     async function analysisdata() {
-//         return new Promise((resolve, reject) => {
-//             //解析xlsx
-//             let obj = xlsx.parse(xlsxfile);
-//             resolve(obj);
-//         });
-//     }
-//
-//     async function readdata(v) {
-//         console.log("xlsx =", v);//xlsx = [ { name: 'Sheet1', data: [ [Array], [Array], [Array] ] } ]
-//         console.log("数据 = ", v[0]);//数据 =  { name: 'Sheet1',
-//         //        data: [ [ '姓名', '年龄' ], [ '张三', 20 ], [ '李四', 30 ] ]}
-//         console.log("要上传的数据 = ", v[0].data);//要上传的数据 =  [ [ '姓名', '年龄' ], [ '张三', 20 ], [ '李四', 30 ] ]
-//         ctx.body = v;
-//     }
-//
-//     let r = await analysisdata();
-//     r = await readdata(r);
-// });
+router.post('/data', async (ctx) => {
+    var files = glob.sync('**/*.xlsx', {
+        cwd: storageDir
+    });
+
+    logger.info(files);
+
+    async function analysisdata() {
+        return new Promise((resolve, reject) => {
+            //解析xlsx
+            let obj = xlsx.parse(xlsxfile);
+            resolve(obj);
+        });
+    }
+
+    async function readdata(v) {
+        console.log("xlsx =", v);//xlsx = [ { name: 'Sheet1', data: [ [Array], [Array], [Array] ] } ]
+        console.log("数据 = ", v[0]);//数据 =  { name: 'Sheet1',
+        //        data: [ [ '姓名', '年龄' ], [ '张三', 20 ], [ '李四', 30 ] ]}
+        console.log("要上传的数据 = ", v[0].data);//要上传的数据 =  [ [ '姓名', '年龄' ], [ '张三', 20 ], [ '李四', 30 ] ]
+        ctx.body = v;
+    }
+
+    let r = await analysisdata();
+    r = await readdata(r);
+});
 
 router.post('/xlsx', upload.single('file'), function (req, res, next) {
     if (req.file) {
