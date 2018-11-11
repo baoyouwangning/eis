@@ -157,39 +157,55 @@
                 columns: dataCols,
                 hideColumn: '1',
                 onEditableSave: function (field, row, oldValue, $el) {
-                    debugger;
+                    // debugger;
                     console.log(field, row, oldValue, $el);
 
                     function ridx(char) {
                         return char.charCodeAt(0) - 'A'.charCodeAt(0);
                     }
 
+                    function add() {
+                        var res = 0;
+                        for (var i = 0; i < arguments.length; i++) {
+                            res = Decimal.add(res, arguments[i]);
+                        }
+                        return res;
+                    }
+
+                    function mul(args) {
+                        var res = 1;
+                        for (var i = 0; i < arguments.length; i++) {
+                            res = Decimal.mul(res, arguments[i]);
+                        }
+                        return res;
+                    }
+
                     /* 开始计算
                      *
                      * */
                     // 每票基础费用 H2=B2+C2+D2
-                    var H2 = row[ridx("B")] + row[ridx("C")] + row[ridx("D")];
+                    var H2 = add(row[ridx("B")], row[ridx("C")], row[ridx("D")]);
 
                     // 续重 I2=E2+F2+G2+0.3
-                    var I2 = row[ridx("E")] + row[ridx("F")] + row[ridx("G")] + 0.3;
+                    var I2 = add(row[ridx("E")], row[ridx("F")], row[ridx("G")], 0.3);
 
                     // 汽车成本价格 K2=(I2*J2)+H2
-                    var K2 = I2 * row[ridx("J")] + H2;
+                    var K2 = add(mul(I2, row[ridx("J")]), H2);
 
                     // 计算首重 N2=H2+L2
-                    var N2 = H2 + row[ridx("L")];
+                    var N2 = add(H2, row[ridx("L")]);
 
                     // 计算续重 O2=E2+F2+M2+0.3
-                    var O2 = row[ridx("E")] + row[ridx("F")] + row[ridx("M")] + 0.3;
+                    var O2 = add(row[ridx("E")], row[ridx("F")], row[ridx("M")], 0.3);
 
                     // 空运成本价格 P2=N2+O2*J2
-                    var P2 = N2 + O2 * row[ridx("J")];
+                    var P2 = add(N2, mul(O2, row[ridx("J")]));
 
                     // 更新汽车成本显示
                     $($el).parent().next().text(K2);
 
                     // 更新空运成本显示
-                    $($el).parent().next().next().text(K2);
+                    $($el).parent().next().next().text(P2);
                 }
             });
         }
