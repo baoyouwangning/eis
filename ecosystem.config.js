@@ -12,7 +12,7 @@ module.exports = {
 
         // First application
         {
-            name: 'mcn_open_fe',
+            name: 'eis',
             script: 'server/mainServer.js',
             // instances: 2,
             // exec_mode: 'cluster',
@@ -24,15 +24,15 @@ module.exports = {
             merge_logs: true,
             env: {
                 NODE_ENV: 'development',
-                PORT: 9090
+                PORT: 8888
             },
             env_staging: {
                 NODE_ENV: 'staging',
-                PORT: 9090
+                PORT: 8888
             },
             env_production: {
                 NODE_ENV: 'production',
-                PORT: 9090
+                PORT: 8888
             }
         },
 
