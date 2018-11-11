@@ -13,87 +13,171 @@
     <script type="text/javascript" src="jquery-2.0.3.min.js"></script>
     <script type="text/javascript" src="bootstrap-table.min.js"></script>
     <script type="text/javascript" src="bootstrap-table-zh-CN.min.js"></script>
-
     <script type="text/javascript" src="bootstrap.min.js"></script>
     <script type="text/javascript" src="bootstrap-editable.min.js"></script>
+    <script type="text/javascript" src="bootstrap-table-editable.js"></script>
+
 </head>
 <body>
 
-<table id="eis-table" class="table table-bordered table-striped">
-    <thead>
-    <tr>
-        <th data-field="Name" data-editable="true">部门名称</th>
-        <th data-field="ParentName">上级部门</th>
-        <th data-field="Level" data-editable="true">部门级别</th>
-        <th data-field="Desc" data-editable="true">描述</th>
-    </tr>
-    </thead>
-</table>
+<table id="eis-table"></table>
 
 <script type="text/javascript">
     $(function () {
-        $("#eis-table").bootstrapTable({
-            toolbar: "#toolbar",
-            idField: "Id",
-            pagination: true,
-            showRefresh: true,
-            search: true,
-            clickToSelect: true,
-            queryParams: function (param) {
-                return {};
-            },
-            url: "/api/data",
-            columns: [{
-                checkbox: true
-            }, {
-                field: "UserName",
-                title: "用户名",
-                editable: {
-                    type: 'text',
-                    title: '用户名',
-                    validate: function (v) {
-                        if (!v) return '用户名不能为空';
 
+        function transformOriginData(data) {
+            var dataCols = [
+                {
+                    field: "UserName",
+                    title: "用户名",
+                    editable: {
+                        type: 'text',
+                        title: '用户名',
+                        validate: function (v) {
+                            if (!v) return '用户名不能为空';
+
+                        }
                     }
-                }
-            }, {
-                field: "Age",
-                title: "年龄",
-            }, {
-                field: "Birthday",
-                title: "生日",
-                formatter: function (value, row, index) {
-                    var date = eval('new ' + eval(value).source)
-                    return date.format("yyyy-MM-dd");
-                }
-            },
+                }, {
+                    field: "Age",
+                    title: "年龄",
+                }, {
+                    field: "Birthday",
+                    title: "生日",
+                    formatter: function (value, row, index) {
+                        var date = eval('new ' + eval(value).source)
+                        return date.format("yyyy-MM-dd");
+                    }
+                },
                 {
                     field: "DeptName",
                     title: "部门"
                 }, {
                     field: "Hobby",
                     title: "爱好"
-                }],
+                }
+            ];
 
-            onEditableSave: function (field, row, oldValue, $el) {
-                $.ajax({
-                    type: "post",
-                    url: "/Editable/Edit",
-                    data: row,
-                    dataType: 'JSON',
-                    success: function (data, status) {
-                        if (status == "success") {
-                            alert('提交数据成功');
+            var dataCols = [
+                {
+                    "field": "0",
+                    "title": "目的省份"
+                }, {
+                    "field": "1",
+                    "title": "面单/票"
+                }, {
+                    "field": "2",
+                    "title": "操作费/票"
+                }, {
+                    "field": "3",
+                    "title": "派费/票"
+                }, {
+                    "field": "4",
+                    "title": "班车/公斤"
+                }, {
+                    "field": "5",
+                    "title": "称重/公斤",
+                    editable: {
+                        type: 'text',
+                        title: '称重/公斤',
+                        validate: function (v, a, b) {
+                            if (isNaN(v)) {
+                                return '请输入数字～'
+                            }
+
+                            return false;
                         }
-                    },
-                    error: function () {
-                        alert('编辑失败');
-                    },
-                    complete: function () {
-
                     }
+                }, {
+                    "field": "6",
+                    "title": "汽运"
+                    // formatter: function (value, row, index) {
+                    //     var date = eval('new ' + eval(value).source)
+                    //     return date.format("yyyy-MM-dd");
+                    // }
+                }, {
+                    "field": "7",
+                    "title": "每票基础费用"
+                }, {
+                    "field": "8",
+                    "title": "续重"
+                }, {
+                    "field": "9",
+                    "title": "重量/公斤"
+                }, {
+                    "field": "10",
+                    "title": "汽运成本价格"
+                }, {
+                    "field": "11",
+                    "title": "空运"
+                }, {
+                    "field": "12",
+                    "title": null
+                }, {
+                    "field": "13",
+                    "title": "计算首重"
+                }, {
+                    "field": "14",
+                    "title": "续重计算"
+                }, {
+                    "field": "15",
+                    "title": "空运成本价格"
+                }
+            ];
 
-                });
+            var dataSource = data.slice(1);
+
+            initTable(dataCols, dataSource);
+        }
+
+        function initTable(dataCols, dataSource) {
+            // $.fn.editable.defaults.mode = 'inline';
+
+            $("#eis-table").bootstrapTable({
+                toolbar: "#toolbar",
+                idField: "0",
+                pagination: true,
+                showRefresh: true,
+                search: true,
+                clickToSelect: true,
+                // url: '/api/data',
+                queryParams: function (param) {
+                    return {};
+                },
+                data: dataSource,
+                columns: dataCols,
+                hideColumn: '1',
+                onEditableSave: function (field, row, oldValue, $el) {
+                    $.ajax({
+                        type: "post",
+                        url: "/Editable/Edit",
+                        data: row,
+                        dataType: 'JSON',
+                        success: function (data, status) {
+                            if (status == "success") {
+                                alert('提交数据成功');
+                            }
+                        },
+                        error: function () {
+                            alert('编辑失败');
+                        },
+                        complete: function () {
+
+                        }
+
+                    });
+                }
+            });
+        }
+
+        $.ajax({
+            url: "/api/data",
+            type: "get",
+            success: function (data) {
+                console.log(data);
+
+                // 数据结构转换
+                transformOriginData(data);
             }
         });
     });

@@ -40,11 +40,11 @@ app.use(express.static(path.join(__dirname, '../../dist'), {
     }
 }));
 
-// index html
-app.use('/', routes);
-
 // api
 app.use('/api', apiRoutes);
+
+// index html
+app.use('/', routes);
 
 // 错误处理中间件
 app.use(function (err, req, res, next) {

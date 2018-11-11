@@ -8,11 +8,15 @@
 const express = require('express');
 const router = express.Router();
 const xlsx = require('node-xlsx');
+const path = require('path');
 const logger = require('../logger').default;
 var glob = require("glob");
 var multer = require('multer');
 var homeDir = require('home-dir');
 var storageDir = homeDir('/storage');  //home/root/storage/
+
+var XLSX = require('xlsx');
+var micro = require('micro');
 
 var storage = multer.diskStorage({
     destination: storageDir,
@@ -30,6 +34,15 @@ var upload = multer({
     }
 });
 
+router.post('/xlsx', upload.single('file'), function (req, res, next) {
+    if (req.file) {
+        logger.info(req.file);
+        res.json({status: 200, msg: '更新成功～', fileList: req.file});
+    } else {
+        res.status(404).json({status: 404, msg: '更新失败～'});
+    }
+});
+
 /* GET home page. */
 router.get('/', function (req, res, next) {
 
@@ -37,12 +50,13 @@ router.get('/', function (req, res, next) {
 });
 
 //导入Excel，xlsx格式
-router.post('/data', async (ctx) => {
-    var files = glob.sync('**/*.xlsx', {
-        cwd: storageDir
-    });
+router.get('/data', async function (req, res, next) {
+    var xlsxfile = glob.sync(path.resolve(storageDir, '**/*.xlsx'))[0];
 
-    logger.info(files);
+    // var wb = XLSX.read(xlsxfile, {type: 'buffer'});
+    // var wb = XLSX.readFile(xlsxfile);
+    // var ws = wb.Sheets[wb.SheetNames[0]];
+    // return micro.send(res, 200, JSON.stringify(XLSX.utils.sheet_to_json(ws, {header: 1, raw: true})));
 
     async function analysisdata() {
         return new Promise((resolve, reject) => {
@@ -53,25 +67,17 @@ router.post('/data', async (ctx) => {
     }
 
     async function readdata(v) {
-        console.log("xlsx =", v);//xlsx = [ { name: 'Sheet1', data: [ [Array], [Array], [Array] ] } ]
-        console.log("数据 = ", v[0]);//数据 =  { name: 'Sheet1',
+        logger.info("xlsx =", v);//xlsx = [ { name: 'Sheet1', data: [ [Array], [Array], [Array] ] } ]
+        logger.info("数据 = ", v[0]);//数据 =  { name: 'Sheet1',
         //        data: [ [ '姓名', '年龄' ], [ '张三', 20 ], [ '李四', 30 ] ]}
-        console.log("要上传的数据 = ", v[0].data);//要上传的数据 =  [ [ '姓名', '年龄' ], [ '张三', 20 ], [ '李四', 30 ] ]
-        ctx.body = v;
+        logger.info("要上传的数据 = ", v[0].data);//要上传的数据 =  [ [ '姓名', '年龄' ], [ '张三', 20 ], [ '李四', 30 ] ]
+        req.body = v;
+
+        res.json(v[0].data);
     }
 
     let r = await analysisdata();
     r = await readdata(r);
 });
-
-router.post('/xlsx', upload.single('file'), function (req, res, next) {
-    if (req.file) {
-        logger.info(req.file);
-        res.json({status: 200, msg: '更新成功～' ,fileList: req.file});
-    } else {
-        res.status(404).json({status: 404, msg: '更新失败～'});
-    }
-});
-
 
 module.exports = router;
