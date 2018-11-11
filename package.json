@@ -29,7 +29,10 @@
     "compression": "^1.7.3",
     "cookie-parser": "^1.4.3",
     "express": "^4.16.4",
+    "home-dir": "^1.0.0",
     "log4js": "^3.0.6",
+    "multer": "^1.4.1",
+    "node-xlsx": "^0.12.1",
     "pm2": "^3.2.2",
     "request": "^2.88.0",
     "serve-favicon": "^2.5.0"

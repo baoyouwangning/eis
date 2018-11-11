@@ -23,11 +23,14 @@ router.get('/*', function (req, res) {
     var list = req.path.split(/\\|\//); // *nux: /; windows: \;
     var fileName = list[list.length - 1];
     var filePath = path.resolve(distRoot, req.path.replace(/^(\\|\/)/, ''));
+    var filePathFix = `${filePath}.html`;
 
-    if (-1 === fileName.lastIndexOf('.')) {
-        res.sendFile(path.resolve(distRoot, 'index.html'));
-    } else if (fs.existsSync(filePath)) {
+    if (fs.existsSync(filePath)) {
         res.sendFile(filePath);
+    } else if (fs.existsSync(filePathFix)) {
+        res.sendFile(filePathFix);
+    } else if (-1 === fileName.lastIndexOf('.')) {
+        res.sendFile(path.resolve(distRoot, 'index.html'));
     } else {
         res.status(404).type('html').end('nice work~');
     }
