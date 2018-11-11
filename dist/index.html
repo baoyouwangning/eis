@@ -16,7 +16,7 @@
     <script type="text/javascript" src="bootstrap.min.js"></script>
     <script type="text/javascript" src="bootstrap-editable.min.js"></script>
     <script type="text/javascript" src="bootstrap-table-editable.js"></script>
-
+    <script type="text/javascript" src="decimal.js"></script>
 </head>
 <body>
 
@@ -24,40 +24,7 @@
 
 <script type="text/javascript">
     $(function () {
-
-        function transformOriginData(data) {
-            var dataCols = [
-                {
-                    field: "UserName",
-                    title: "用户名",
-                    editable: {
-                        type: 'text',
-                        title: '用户名',
-                        validate: function (v) {
-                            if (!v) return '用户名不能为空';
-
-                        }
-                    }
-                }, {
-                    field: "Age",
-                    title: "年龄",
-                }, {
-                    field: "Birthday",
-                    title: "生日",
-                    formatter: function (value, row, index) {
-                        var date = eval('new ' + eval(value).source)
-                        return date.format("yyyy-MM-dd");
-                    }
-                },
-                {
-                    field: "DeptName",
-                    title: "部门"
-                }, {
-                    field: "Hobby",
-                    title: "爱好"
-                }
-            ];
-
+        function totalCols() {
             var dataCols = [
                 {
                     "field": "0",
@@ -80,7 +47,7 @@
                     editable: {
                         type: 'text',
                         title: '称重/公斤',
-                        validate: function (v, a, b) {
+                        validate: function (v) {
                             if (isNaN(v)) {
                                 return '请输入数字～'
                             }
@@ -124,6 +91,48 @@
                     "title": "空运成本价格"
                 }
             ];
+        }
+
+        function computedCols(data) {
+            var titleList = data[0];
+            var dataCols = [
+                {
+                    "field": "0",
+                    "title": titleList[0]
+                }, {
+                    "field": "5",
+                    "title": titleList[5],
+                    editable: {
+                        type: 'text',
+                        title: titleList[5],
+                        validate: function (v) {
+                            if (isNaN(v)) {
+                                return '请输入数字～'
+                            }
+
+                            return false;
+                        }
+                    }
+                }, {
+                    "field": "10",
+                    "title": titleList[10],
+                    formatter: function (value, row, index) {
+                        return new Decimal(value);
+                    }
+                }, {
+                    "field": "15",
+                    "title": titleList[15],
+                    formatter: function (value, row, index) {
+                        return new Decimal(value);
+                    }
+                }
+            ];
+
+            return dataCols;
+        }
+
+        function transformOriginData(data) {
+            var dataCols = computedCols(data);
 
             var dataSource = data.slice(1);
 
@@ -148,24 +157,39 @@
                 columns: dataCols,
                 hideColumn: '1',
                 onEditableSave: function (field, row, oldValue, $el) {
-                    $.ajax({
-                        type: "post",
-                        url: "/Editable/Edit",
-                        data: row,
-                        dataType: 'JSON',
-                        success: function (data, status) {
-                            if (status == "success") {
-                                alert('提交数据成功');
-                            }
-                        },
-                        error: function () {
-                            alert('编辑失败');
-                        },
-                        complete: function () {
+                    debugger;
+                    console.log(field, row, oldValue, $el);
 
-                        }
+                    function ridx(char) {
+                        return char.charCodeAt(0) - 'A'.charCodeAt(0);
+                    }
 
-                    });
+                    /* 开始计算
+                     *
+                     * */
+                    // 每票基础费用 H2=B2+C2+D2
+                    var H2 = row[ridx("B")] + row[ridx("C")] + row[ridx("D")];
+
+                    // 续重 I2=E2+F2+G2+0.3
+                    var I2 = row[ridx("E")] + row[ridx("F")] + row[ridx("G")] + 0.3;
+
+                    // 汽车成本价格 K2=(I2*J2)+H2
+                    var K2 = I2 * row[ridx("J")] + H2;
+
+                    // 计算首重 N2=H2+L2
+                    var N2 = H2 + row[ridx("L")];
+
+                    // 计算续重 O2=E2+F2+M2+0.3
+                    var O2 = row[ridx("E")] + row[ridx("F")] + row[ridx("M")] + 0.3;
+
+                    // 空运成本价格 P2=N2+O2*J2
+                    var P2 = N2 + O2 * row[ridx("J")];
+
+                    // 更新汽车成本显示
+                    $($el).parent().next().text(K2);
+
+                    // 更新空运成本显示
+                    $($el).parent().next().next().text(K2);
                 }
             });
         }
@@ -175,6 +199,15 @@
             type: "get",
             success: function (data) {
                 console.log(data);
+
+                // 浮点数修正
+                for(var i = 1; i < data.length; i++) {
+                    for (var j = 0; j < data[i].length; j++) {
+                        if (data[i][j] && !isNaN(data[i][j])) {
+                            data[i][j] = data[i][j].toFixed(2);
+                        }
+                    }
+                }
 
                 // 数据结构转换
                 transformOriginData(data);
