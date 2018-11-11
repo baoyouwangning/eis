@@ -5,30 +5,53 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>基础数据导入</title>
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap-table.min.css">
+    <link rel="stylesheet" src="bootstrap-editable.css"/>
+
     <script type="text/javascript" src="jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="bootstrap-table.min.js"></script>
+    <script type="text/javascript" src="bootstrap-table-zh-CN.min.js"></script>
+    <script type="text/javascript" src="bootstrap.min.js"></script>
+    <script type="text/javascript" src="bootstrap-editable.min.js"></script>
+    <script type="text/javascript" src="bootstrap-table-editable.js"></script>
+    <script type="text/javascript" src="decimal.js"></script>
     <script type="text/javascript" src="xlsx.full.min.js"></script>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
+        table, tr, td {
+            border: 1px black solid;
         }
 
-        table, tr, td {
-            border: 1px red solid;
+        table {
+            margin: 0 auto;
+        }
+
+        .wrap {
+            width: 1000px;
+            margin: 20px auto;
+        }
+
+        .xlsx-submit {
+            display: none;
+            width: 150px;
+            margin: 10px auto;
         }
     </style>
 
 </head>
 <body>
 
-<input type="file" onchange="importf(this)"/>
-<div id="demo"></div>
-<button id="xlsx">提交</button>
+<div class="wrap">
+    <input type="file" onchange="importf(this)" class="btn"/>
+    <div id="demo"></div>
+    <table id="eis-table"></table>
+    <div id="xlsx-submit" class="btn btn-default xlsx-submit">提交</div>
+</div>
 
 <script>
-    var wb;//读取完成的数据
-    var rABS = false; //是否将文件读取为二进制字符串
+    var wb;
+    var rABS = true;
 
     function importf(obj) {//导入
         if (!obj.files) {
@@ -40,7 +63,7 @@
         reader.onload = function (e) {
             var data = e.target.result;
             if (rABS) {
-                wb = XLSX.read(btoa(fixdata(data)), {//手动转化
+                wb = XLSX.read(btoa(fixdata(data)), {
                     type: 'base64'
                 });
             } else {
@@ -48,9 +71,25 @@
                     type: 'binary'
                 });
             }
-            //wb.SheetNames[0]是获取Sheets中第一个Sheet的名字
-            //wb.Sheets[Sheet名]获取第一个Sheet的数据
-            document.getElementById("demo").innerHTML = JSON.stringify(XLSX.utils.sheet_to_html(wb.Sheets[wb.SheetNames[0]]));
+
+            document.getElementById("demo").innerHTML = XLSX.utils.sheet_to_html(wb.Sheets[wb.SheetNames[0]]);
+
+            var jsonData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+
+            // 浮点数修正
+            for (var i = 0; i < jsonData.length; i++) {
+                for (var j in jsonData[i]) {
+                    if (jsonData[i].hasOwnProperty(j)) {
+                        if (jsonData[i][j] && !isNaN(jsonData[i][j])) {
+                            jsonData[i][j] = jsonData[i][j].toFixed(2);
+                        }
+                    }
+                }
+            }
+
+            // transformOriginData(jsonData);
+
+            document.querySelector('#xlsx-submit').style.display = 'block';
         };
         if (rABS) {
             reader.readAsArrayBuffer(f);
@@ -63,16 +102,90 @@
         var o = "",
             l = 0,
             w = 10240;
+
         for (; l < data.byteLength / w; ++l) o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w, l * w + w)));
         o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w)));
         return o;
+    }
+
+    function transformOriginData(jsonData) {
+        var dataCols = [
+            {
+                "field": "目的省份",
+                "title": "目的省份"
+            }, {
+                "field": "面单/票",
+                "title": "面单/票"
+            }, {
+                "field": "操作费/票",
+                "title": "操作费/票"
+            }, {
+                "field": "派费/票",
+                "title": "派费/票"
+            }, {
+                "field": "班车/公斤",
+                "title": "班车/公斤"
+            }, {
+                "field": "称重/公斤",
+                "title": "称重/公斤",
+            }, {
+                "field": "汽运",
+                "title": "汽运"
+            }, {
+                "field": "每票基础费用",
+                "title": "每票基础费用"
+            }, {
+                "field": "续重",
+                "title": "续重"
+            }, {
+                "field": "重量/公斤",
+                "title": "重量/公斤"
+            }, {
+                "field": "汽运成本价格",
+                "title": "汽运成本价格"
+            }, {
+                "field": "空运",
+                "title": "空运"
+            }, {
+                "field": "null",
+                "title": null
+            }, {
+                "field": "计算首重",
+                "title": "计算首重"
+            }, {
+                "field": "续重计算",
+                "title": "续重计算"
+            }, {
+                "field": "空运成本价格",
+                "title": "空运成本价格"
+            }
+        ];
+
+        var dataSource = jsonData;
+
+        console.log(dataSource);
+
+        $("#eis-table").bootstrapTable({
+            toolbar: "#toolbar",
+            idField: "目的省份",
+            pagination: true,
+            showRefresh: true,
+            search: true,
+            clickToSelect: true,
+            // url: '/api/data',
+            queryParams: function (param) {
+                return {};
+            },
+            data: dataSource,
+            columns: dataCols
+        });
     }
 
 </script>
 
 <script>
     $(function () {
-        $("#xlsx").on("click", function () {
+        $("#xlsx-submit").on("click", function () {
 
             var formData = new FormData();
             formData.append("file", window.f);
