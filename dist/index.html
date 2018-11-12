@@ -31,11 +31,11 @@
                     "field": "0",
                     "title": titleList[0]
                 }, {
-                    "field": "5",
-                    "title": titleList[5],
+                    "field": "9",
+                    "title": titleList[9],
                     editable: {
                         type: 'text',
-                        title: titleList[5],
+                        title: titleList[9],
                         validate: function (v) {
                             if (isNaN(v)) {
                                 return '请输入数字～'
@@ -149,7 +149,7 @@
                 // 浮点数修正
                 for(var i = 1; i < data.length; i++) {
                     for (var j = 0; j < data[i].length; j++) {
-                        if (data[i][j] && !isNaN(data[i][j])) {
+                        if (data[i][j] && !isNaN(data[i][j]) && -1 !== data[i][j].toString().indexOf('.')) {
                             data[i][j] = data[i][j].toFixed(2);
                         }
                     }
