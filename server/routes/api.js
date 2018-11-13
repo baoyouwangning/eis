@@ -71,7 +71,7 @@ router.get('/list', async function (req, res, next) {
                 mtime,
                 content: md5Value,
                 // url: `${xmlURLPrefix}${name.replace(/\.json/, ".xml")}`
-                url: `${xmlURLPrefix}${md5Value}`
+                url: `${xmlURLPrefix}?d=${md5Value}`
             }
         }));
 
@@ -84,7 +84,21 @@ router.get('/list', async function (req, res, next) {
 
 //导入Excel，xlsx格式
 router.get('/data', async function (req, res, next) {
-    var xlsxfile = glob.sync(path.resolve(storageDir, '**/*.xlsx'))[0];
+    const xlsxfileList = glob.sync(path.resolve(storageDir, '**/*.xlsx'));
+    let xlsxfile = xlsxfileList[0];
+
+    for(let i = 0; i < xlsxfileList.length; i++) {
+        const file = xlsxfileList[i];
+        var content = await fs.readFileAsync(file).then(data => data.toString());
+        var md5 = crypto.createHash('md5');
+        md5.update(content);
+        const md5Value = md5.digest('hex');
+
+        if (md5Value === req.query.d) {
+            xlsxfile = file;
+            break;
+        }
+    }
 
     // var wb = XLSX.read(xlsxfile, {type: 'buffer'});
     // var wb = XLSX.readFile(xlsxfile);

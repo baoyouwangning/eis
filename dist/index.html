@@ -143,7 +143,9 @@
 
         $.ajax({
             url: "/api/data",
-            type: "get",
+            data: {
+                d: location.search.replace(/.*(\?|&)d=([^&]*)/,"$2")
+            },
             success: function (data) {
                 console.log(data);
 
