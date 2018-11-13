@@ -7,13 +7,16 @@
 
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
+const Promise = require("bluebird");
+const fs = Promise.promisifyAll(require("fs"));
 const xlsx = require('node-xlsx');
 const path = require('path');
 const logger = require('../logger').default;
-var glob = require("glob");
-var multer = require('multer');
-var homeDir = require('home-dir');
-var storageDir = homeDir('/storage');  //home/root/storage/
+const glob = require("glob");
+const multer = require('multer');
+const homeDir = require('home-dir');
+const storageDir = homeDir('/storage');  //home/root/storage/
 
 var XLSX = require('xlsx');
 var micro = require('micro');
@@ -47,6 +50,36 @@ router.post('/xlsx', upload.single('file'), function (req, res, next) {
 router.get('/', function (req, res, next) {
 
     res.status(200).send('你好呀～');
+});
+
+router.get('/list', async function (req, res, next) {
+    // var listRegex = glob.sync(path.resolve(storageDir, '**/*.xlsx'));
+    const files = glob.sync(path.resolve(storageDir, '**/*.xlsx'));
+    const xmlURLPrefix = `${req.protocol}://${req.get('host')}/`;
+
+    try {
+        var list = await Promise.all(files.map(async (file) => {
+            var mtime = await fs.statAsync(file).then(stat => stat.mtime);
+            var name = path.relative(storageDir, file);
+            var content = await fs.readFileAsync(file).then(data => data.toString());
+            var md5 = crypto.createHash('md5');
+            md5.update(content);
+            const md5Value = md5.digest('hex');
+
+            return {
+                name,
+                mtime,
+                content: md5Value,
+                // url: `${xmlURLPrefix}${name.replace(/\.json/, ".xml")}`
+                url: `${xmlURLPrefix}${md5Value}`
+            }
+        }));
+
+        res.json({code: 200, data: list});
+    } catch (e) {
+        logger.error(e);
+        res.json({code: 503, messege: "获取xlsx列表失败"});
+    }
 });
 
 //导入Excel，xlsx格式

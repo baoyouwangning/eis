@@ -43,6 +43,7 @@
 <body>
 
 <div class="wrap">
+    <h1>快递成本查询-xlsx更新</h1>
     <input type="file" onchange="importf(this)" class="btn"/>
     <div id="demo"></div>
     <table id="eis-table"></table>
@@ -81,7 +82,7 @@
                 for (var j in jsonData[i]) {
                     if (jsonData[i].hasOwnProperty(j)) {
                         if (jsonData[i][j] && !isNaN(jsonData[i][j])) {
-                            jsonData[i][j] = jsonData[i][j].toFixed(2);
+                            jsonData[i][j] = Number(jsonData[i][j]).toFixed(2);
                         }
                     }
                 }

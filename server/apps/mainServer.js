@@ -52,7 +52,7 @@ app.use(function (err, req, res, next) {
     res.status(err.status || 500).send('Something broke!');
 });
 
-const server = app.listen(process.env.PORT || 9090, function (err) {
+const server = app.listen(process.env.PORT || 8888, function (err) {
     if (err) {
         console.log(err);
     }
