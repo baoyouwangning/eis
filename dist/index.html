@@ -30,7 +30,6 @@
 
         // 生成文件列表
         function genList(list, container) {
-
             var wrap = $('<div class="list-wrap"><h3 class="text-center">请选择表格</h3></div>');
             var ul = $('<ol>');
 
@@ -49,20 +48,9 @@
             container.append(wrap);
         }
 
-        // 展示xlsx列表页
-        function showListPage() {
-            $.ajax({
-                url: "/api/list",
-                success: function (data) {
-                    console.log(data);
-
-                    genList(data.data, $(document.body));
-                }
-            });
-        }
-
         // 展示计算页
-        function showComputePage() {
+        function showComputePage(data) {
+
             function computedCols(data) {
                 var titleList = data[0];
                 var dataCols = [
@@ -171,13 +159,14 @@
                 });
             }
 
-            function transformOriginData(data) {
-                var dataCols = computedCols(data);
+            var dataCols = computedCols(data);
+            var dataSource = data.slice(1);
 
-                var dataSource = data.slice(1);
+            initTable(dataCols, dataSource);
+        }
 
-                initTable(dataCols, dataSource);
-            }
+        // 请求文件列表
+        if (-1 !== location.search.indexOf('d=')) {
 
             $.ajax({
                 url: "/api/data",
@@ -197,16 +186,23 @@
                     }
 
                     // 数据结构转换
-                    transformOriginData(data);
+                    // transformOriginData(data);
+                    showComputePage(data);
                 }
             });
-        }
 
-        // 请求文件列表
-        if (-1 !== location.search.indexOf('d=')) {
-            showComputePage();
+            // showComputePage();
         } else {
-            showListPage()
+            $.ajax({
+                url: "/api/list",
+                success: function (data) {
+                    console.log(data);
+
+                    genList(data.data, $(document.body));
+                }
+            });
+
+            // showListPage();
         }
 
     });
