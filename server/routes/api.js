@@ -87,6 +87,7 @@ router.get('/data', async function (req, res, next) {
     const xlsxfileList = glob.sync(path.resolve(storageDir, '**/*.xlsx'));
     let xlsxfile = xlsxfileList[0];
 
+    // 找到请求的表格
     for(let i = 0; i < xlsxfileList.length; i++) {
         const file = xlsxfileList[i];
         var content = await fs.readFileAsync(file).then(data => data.toString());
@@ -114,13 +115,12 @@ router.get('/data', async function (req, res, next) {
     }
 
     async function readdata(v) {
-        logger.info("xlsx =", v);//xlsx = [ { name: 'Sheet1', data: [ [Array], [Array], [Array] ] } ]
-        logger.info("数据 = ", v[0]);//数据 =  { name: 'Sheet1',
-        //        data: [ [ '姓名', '年龄' ], [ '张三', 20 ], [ '李四', 30 ] ]}
-        logger.info("要上传的数据 = ", v[0].data);//要上传的数据 =  [ [ '姓名', '年龄' ], [ '张三', 20 ], [ '李四', 30 ] ]
-        req.body = v;
+        logger.info("xlsx =", v); // xlsx = [ { name: 'Sheet1', data: [ [Array], [Array], [Array] ] } ]
 
-        res.json(v[0].data);
+        // req.body = v;
+
+        // res.json(v[0].data);
+        res.json(v);
     }
 
     let r = await analysisdata();
