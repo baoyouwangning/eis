@@ -1,3 +1,24 @@
+// 定义一些公用方法
+function ridx(char) {
+    return char.charCodeAt(0) - 'A'.charCodeAt(0);
+}
+
+function add() {
+    var res = 0;
+    for (var i = 0; i < arguments.length; i++) {
+        res = Decimal.add(res, arguments[i]);
+    }
+    return res;
+}
+
+function mul(args) {
+    var res = 1;
+    for (var i = 0; i < arguments.length; i++) {
+        res = Decimal.mul(res, arguments[i]);
+    }
+    return res;
+}
+
 // 呼伦贝尔双11价格单(3).xlsx 展示计算页
 function showComputePage(data) {
 
