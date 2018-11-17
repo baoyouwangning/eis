@@ -68,130 +68,36 @@
             return res;
         }
 
-        // 快运计算 展示计算页
-        function showComputePage(data) {
+        function betweenEqual(value, section) {
+            return new Decimal(value).gte(new Decimal(section[0])) && new Decimal(value).lte(new Decimal(section[1]));
+        }
 
-            function computedCols(data) {
-                var titleList = data[0];
-                var dataCols = [
-                    {
-                        "field": "0",
-                        "title": titleList[0]
-                    }, {
-                        "field": "1",
-                        "title": titleList[1]
-                    }, {
-                        "field": "15",
-                        "title": titleList[15],
-                        editable: {
-                            type: 'text',
-                            title: titleList[15],
-                            validate: function (v) {
-                                if (isNaN(v)) {
-                                    return '请输入数字～'
-                                }
+        function greaterThanOrEqualTo(value1, value2) {
+            return new Decimal(value1).gte(new Decimal(value2));
+        }
 
-                                return false;
-                            }
-                        },
-                        formatter: function (value, row, index) {
-                            return new Decimal(value || 0);
-                        }
-                    }, {
-                        "field": "16",
-                        "title": titleList[16],
-                        formatter: function (value, row, index) {
-                            return new Decimal(value || 0);
-                        }
-                    }, {
-                        "field": "17",
-                        "title": titleList[17],
-                        formatter: function (value, row, index) {
-                            return new Decimal(value || 0);
-                        }
-                    }
-                ];
-
-                return dataCols;
-            }
-            function initTable(dataCols, dataSource) {
-                /* $.fn.editable.defaults.mode = 'inline'; */
-
-                $("#eis-table").bootstrapTable({
-                    toolbar: "#toolbar",
-                    idField: "0",
-                    pagination: true,
-                    showRefresh: true,
-                    search: true,
-                    clickToSelect: true,
-                    queryParams: function (param) {
-                        return {};
-                    },
-                    data: dataSource,
-                    columns: dataCols,
-                    onEditableSave: function (field, row, oldValue, $el) {
-                        console.log(field, row, oldValue, $el);
-
-                        /* 开始计算 */
-                        /* 找到区间价格 */
-                        var nextValue = row[ridx("P")];
-                        var fixedPrice = 0;
-                        var economicPrice = 0;
-                        if (nextValue >= 0 && nextValue <= 150) {
-                            fixedPrice = row[ridx("D")];
-                            economicPrice = row[ridx("J")];
-                        } else if (nextValue >= 151 && nextValue <= 300) {
-                            fixedPrice = row[ridx("E")];
-                            economicPrice = row[ridx("K")];
-                        } else if (nextValue >= 301 && nextValue <= 500) {
-                            fixedPrice = row[ridx("F")];
-                            economicPrice = row[ridx("L")];
-                        } else if (nextValue >= 501 && nextValue <= 1000) {
-                            fixedPrice = row[ridx("G")];
-                            economicPrice = row[ridx("M")];
-                        } else if (nextValue >= 1001) {
-                            fixedPrice = row[ridx("H")];
-                            economicPrice = row[ridx("N")];
-                        }
-
-                        /* 定日达成本价格： P3*定日达单价+P3*O3 （如果P3的数值在D2的范围内 就用P3*D3+P3*O3）*/
-                        var Q3 = mul(nextValue, add(fixedPrice, row[ridx("O")]));
-                        /* 经济快运成本价格： P3*经济快运单价+P3*O3 （如果P3的数值在J2的范围内 就用P3*J3+P3*O3）*/
-                        var R3 = mul(nextValue, add(economicPrice, row[ridx("O")]));
-
-                        /* 最低费与实际费比较 */
-                        Q3 = Q3 > row[ridx('C')] ? Q3 : row[ridx('C')];
-                        R3 = R3 > row[ridx('I')] ? R3 : row[ridx('I')];
-
-                        /* 更新定日达成本价格显示 */
-                        $($el).parent().next().text(Q3);
-
-                        /* 更新经济快运成本价格显示 */
-                        $($el).parent().next().next().text(R3);
-                    }
-                });
-            }
-
-            var dataCols = computedCols(data);
-            var dataSource = data.slice(2);
-
-            initTable(dataCols, dataSource);
+        function greaterThan(value1, value2) {
+            return new Decimal(value1).gt(new Decimal(value2));
         }
 
         // 请求文件列表
         if (-1 !== location.search.indexOf('d=')) {
-
             $.ajax({
                 url: "/api/data",
                 data: {
-                    d: location.search.replace(/.*(\?|&)d=([^&]*)/,"$2")
+                    d: location.search.replace(/.*(\?|&)d=([^&]*)/, "$2")
                 },
                 success: function (tableFull) {
                     console.log(tableFull);
 
+                    // 表格更新，跳到重新选择页
+                    if (tableFull.code === 204) {
+                        location.href = '/';
+                    }
+
                     // Sheet1: 数据修正
                     var data = tableFull[0].data;
-                    for(var i = 1; i < data.length; i++) {
+                    for (var i = 1; i < data.length; i++) {
                         for (var j = 0; j < data[i].length; j++) {
                             if (data[i][j] && !isNaN(data[i][j]) && -1 !== data[i][j].toString().indexOf('.')) {
                                 data[i][j] = Number(data[i][j]).toFixed(2);
@@ -202,15 +108,14 @@
                     // Sheet2: 拼接function string
                     var funString = '';
                     var codeData = tableFull[1].data;
-                    for(var i = 0; i < codeData.length; i++) {
-                        for(var j = 0; j < codeData[i].length; j++) {
+                    for (var i = 0; i < codeData.length; i++) {
+                        for (var j = 0; j < codeData[i].length; j++) {
                             funString += codeData[i][j];
                         }
                     }
 
                     // 执行Sheet2代码
-                    // eval(funString);
-                    showComputePage(data);
+                    eval(funString);
                 }
             });
         } else {

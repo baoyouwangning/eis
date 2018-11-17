@@ -85,7 +85,7 @@ router.get('/list', async function (req, res, next) {
 //导入Excel，xlsx格式
 router.get('/data', async function (req, res, next) {
     const xlsxfileList = glob.sync(path.resolve(storageDir, '**/*.xlsx'));
-    let xlsxfile = xlsxfileList[0];
+    let xlsxfile = '';
 
     // 找到请求的表格
     for(let i = 0; i < xlsxfileList.length; i++) {
@@ -99,6 +99,12 @@ router.get('/data', async function (req, res, next) {
             xlsxfile = file;
             break;
         }
+    }
+
+    if (!xlsxfile) {
+        res.json({code: 204, msg: '表格数据已更新，请重新返回首页选择～'});
+
+        return;
     }
 
     // var wb = XLSX.read(xlsxfile, {type: 'buffer'});
