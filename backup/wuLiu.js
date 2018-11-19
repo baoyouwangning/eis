@@ -20,12 +20,15 @@ function computedCols(data) {
 
                     return false;
                 }
+            },
+            formatter: function (value, row, index) {
+                return new Decimal(value || 0);
             }
         }, {
             "field": "8",
-            "title": titleList[10],
+            "title": titleList[8],
             formatter: function (value, row, index) {
-                return new Decimal(value);
+                return new Decimal(value || 0);
             }
         }
     ];
