@@ -85,7 +85,7 @@
             $.ajax({
                 url: "/api/data",
                 data: {
-                    d: location.search.replace(/.*(\?|&)d=([^&]*)/, "$2")
+                    d: location.search.replace(/.*(\?|&)d=([^&]*).*/, "$2")
                 },
                 success: function (tableFull) {
                     console.log(tableFull);
